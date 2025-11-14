@@ -23,7 +23,7 @@
 
 	chosen {
 		// FIXME remove this later
-		bootargs = "earlycon=msm_serial_dm,0x78b0000,115200 console=tty0 pmos.debug-shell";
+		bootargs = "earlycon=msm_serial_dm,0x78b0000,115200 console=ttyMSM0 console=tty0 clk_ignore_unused regulator_ignore_unused pd_ignore_unused pmos.debug-shell";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -47,6 +47,7 @@
 				 <&gcc GCC_MDSS_PCLK0_CLK>,
 				 <&gcc GCC_MDSS_ESC0_CLK>;
 			power-domains = <&gcc MDSS_GDSC>;
+			status = "disabled";
 		};
 	};
 
@@ -102,12 +103,20 @@
 };
 
 &blsp1_spi3 {
-	/* There may be 3 types of touchscreens
+	status = "okay";
+	/* Seems like there may be 3 types of touchscreens
 	   (downstream `compatible`s and `reg`s are listed here):
 	* tchip,ilitek; reg = 0
 	* novatek,NVT-ts-spi, novatek-mp-criteria-591C in inner node; reg = 1
 	* focaltech,fts; reg = 2
 	*/
+
+	touchscreen@0 {
+		// Driver is in development process
+		compatible = "ilitek,ili9881h";
+		reg = <0>;
+		status = "okay";
+	};
 };
 
 &blsp2_spi2 {
@@ -120,6 +129,57 @@
 		status = "okay";
 		spi-max-frequency = <19200000>;
 	};
+};
+
+&blsp2_i2c1 {
+	status = "okay";
+
+	backlight: backlight@36 {
+		// driver from mt6768-mainline
+		compatible = "kinetic,ktd3137";
+		reg = <0x36>;
+		kinetic,linear;
+		kinetic,led-current = <0x98>;
+	};
+};
+
+&gpu {
+	status = "okay";
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	panel@0 {
+		// generated driver in drivers/gpu/drm/panel/msm89x7-generated/panel-xiaomi-olive-ili9881h-tianma.c
+		compatible = "mdss,ili9881hplus-c3i";
+		reg = <0>;
+
+		backlight = <&backlight>;
+		reset-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+
+		status = "okay";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	// reference I used is xiaomi-prada
+	// pm8937_l6 has the same configuration (voltage and always-on)
+	vddio-supply = <&pm8953_l6>;
+	status = "okay";
 };
 
 &pm8953_resin {
