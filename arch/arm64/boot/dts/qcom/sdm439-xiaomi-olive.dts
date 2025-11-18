@@ -23,7 +23,7 @@
 
 	chosen {
 		// FIXME remove this later
-		bootargs = "earlycon=msm_serial_dm,0x78b0000,115200 console=ttyMSM0 console=tty0 clk_ignore_unused regulator_ignore_unused pd_ignore_unused pmos.debug-shell";
+		bootargs = "earlycon=msm_serial_dm,0x78b0000,115200 console=tty0 console=ttyMSM0 clk_ignore_unused regulator_ignore_unused pd_ignore_unused pmos.debug-shell";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -31,9 +31,9 @@
 
 		stdout-path = &framebuffer0;
 
-		framebuffer0: framebuffer@90000000 {
+		framebuffer0: framebuffer@90001000 {
 			compatible = "simple-framebuffer";
-			reg = <0x0 0x90000000 0x0 (720 * 1520 * 3)>;
+			reg = <0x0 0x90001000 0x0 (720 * 1520 * 3)>;
 			width = <720>;
 			height = <1520>;
 			stride = <(720 * 3)>;
@@ -47,7 +47,6 @@
 				 <&gcc GCC_MDSS_PCLK0_CLK>,
 				 <&gcc GCC_MDSS_ESC0_CLK>;
 			power-domains = <&gcc MDSS_GDSC>;
-			status = "disabled";
 		};
 	};
 
@@ -77,8 +76,8 @@
 			no-map;
 		};
 
-		framebuffer_mem: memory@90000000 {
-			reg = <0x0 0x90000000 0x0 (720 * 1520 * 3)>;
+		framebuffer_mem: memory@90001000 {
+			reg = <0x0 0x90001000 0x0 (720 * 1520 * 3)>;
 			no-map;
 		};
 	};
@@ -99,6 +98,10 @@
 
 &adsp_mem {
 	size = <0x0 0x1800000>;
+	status = "okay";
+};
+
+&blsp1_uart2 {
 	status = "okay";
 };
 
@@ -133,7 +136,8 @@
 
 &blsp2_i2c1 {
 	status = "okay";
-
+	
+	// TODO support for lm3697 (how exactly it should be implemented..?)
 	backlight: backlight@36 {
 		// driver from mt6768-mainline
 		compatible = "kinetic,ktd3137";
@@ -142,7 +146,7 @@
 		kinetic,led-current = <0x98>;
 	};
 };
-
+/* Panels are in WIP, so MDSS stuff is disabled
 &gpu {
 	status = "okay";
 };
@@ -181,7 +185,7 @@
 	vddio-supply = <&pm8953_l6>;
 	status = "okay";
 };
-
+*/
 &pm8953_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
 	status = "okay";
