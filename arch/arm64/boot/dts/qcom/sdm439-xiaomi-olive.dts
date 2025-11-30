@@ -22,14 +22,11 @@
 	qcom,board-id = <0xb 8>;
 
 	chosen {
-		// FIXME remove this later
-		bootargs = "earlycon=msm_serial_dm,0x78b0000,115200 console=tty0 console=ttyMSM0 clk_ignore_unused regulator_ignore_unused pd_ignore_unused pmos.debug-shell";
+		bootargs = "console=ttyMSM0,115200 console=tty0";
 
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-
-		stdout-path = &framebuffer0;
 
 		framebuffer0: framebuffer@90001000 {
 			compatible = "simple-framebuffer";
@@ -118,6 +115,10 @@
 		// Driver is in development process
 		compatible = "ilitek,ili9881h";
 		reg = <0>;
+
+		// Downstream Dt defines last value as `0x00`, which means `GPIO_ACTIVE_HIGH`
+		reset-gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
+
 		status = "okay";
 	};
 };
@@ -136,21 +137,41 @@
 
 &blsp2_i2c1 {
 	status = "okay";
+
+	lm3697@36 {
+		compatible = "ti,lm3697";
+		reg = <0x36>;
+		enable-gpios = <&pm8953_gpios 4 GPIO_ACTIVE_HIGH>;
+		status = "disabled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		led@0 {
+			reg = <0>;
+			led-sources = <0 1 2>;
+			ti,brightness-resolution = <255>;
+			ramp-up-us = <200000>;
+			rawp-down-us = <200000>;
+			linux,default-trigger = "backlight";
+		};
+
+	};
 	
-	// TODO support for lm3697 (how exactly it should be implemented..?)
-	backlight: backlight@36 {
+	ktd3137@36 {
 		// driver from mt6768-mainline
 		compatible = "kinetic,ktd3137";
 		reg = <0x36>;
 		kinetic,linear;
 		kinetic,led-current = <0x98>;
+		status = "disabled";
 	};
 };
-/* Panels are in WIP, so MDSS stuff is disabled
+
 &gpu {
 	status = "okay";
 };
 
+/* DSI is not working, so this is commented out
 &mdss {
 	status = "okay";
 };
@@ -279,13 +300,14 @@
 		};
 
 		pm8953_l11: l11 {
-			regulator-min-microvolt = <2950000>;
+			regulator-min-microvolt = <2700000>;
 			regulator-max-microvolt = <3300000>;
 		};
 
 		pm8953_l12: l12 {
-			regulator-min-microvolt = <1800000>;
+			regulator-min-microvolt = <1648000>;
 			regulator-max-microvolt = <1800000>;
+			// Downstream max-microvolt value is 3100000
 			// regulator-max-microvolt = <3100000>;
 		};
 
@@ -315,8 +337,8 @@
 		};
 
 		pm8953_l19: l19 {
-			regulator-min-microvolt = <1450000>;
-			regulator-max-microvolt = <1450000>;
+			regulator-min-microvolt = <1350000>;
+			regulator-max-microvolt = <1350000>;
 		};
 
 		pm8953_l22: l22 {
